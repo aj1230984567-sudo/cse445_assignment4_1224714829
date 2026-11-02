@@ -3,6 +3,7 @@ using System.Xml.Schema;
 using System.Xml;
 using Newtonsoft.Json;
 using System.IO;
+using System.Net;
 
 namespace ConsoleApp1
 {
@@ -97,10 +98,11 @@ namespace ConsoleApp1
             }
         }
 
-        // helper method to download content from URL
+        // helper method to download content from URL with TLS 1.2 enabled for GitHub
         private static string DownloadContent(string url)
         {
-            using (System.Net.WebClient client = new System.Net.WebClient())
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            using (WebClient client = new WebClient())
             {
                 return client.DownloadString(url);
             }
