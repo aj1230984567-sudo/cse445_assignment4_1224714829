@@ -3,7 +3,6 @@ using System.Xml.Schema;
 using System.Xml;
 using Newtonsoft.Json;
 using System.IO;
-using System.Net;
 
 namespace ConsoleApp1
 {
@@ -15,27 +14,29 @@ namespace ConsoleApp1
 
         public static void Main(string[] args)
         {
-            // CRITICAL: Force TLS 1.2 so WebClient can successfully download from GitHub Pages
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-
+            // Q3.1 verify valid XML
             string result = Verification(xmlURL, xsdURL);
             Console.WriteLine(result);
 
+            // Q3.2 verify XML with errors
             result = Verification(xmlErrorURL, xsdURL);
             Console.WriteLine(result);
 
+            // Q3.3 convert XML to JSON
             result = Xml2Json(xmlURL);
             Console.WriteLine(result);
         }
 
-        // Q2.1
+        // Q2.1 validation method
         public static string Verification(string xmlUrl, string xsdUrl)
         {
             try
             {
+                // set up XmlReaderSettings for XSD validation
                 XmlReaderSettings settings = new XmlReaderSettings();
                 settings.ValidationType = ValidationType.Schema;
 
+                // download XSD schema content and load it
                 string xsdContent = DownloadContent(xsdUrl);
                 using (StringReader xsdSr = new StringReader(xsdContent))
                 {
@@ -46,17 +47,19 @@ namespace ConsoleApp1
                 }
 
                 string errorMessage = "";
+                // handler to capture validation errors
                 settings.ValidationEventHandler += (sender, e) =>
                 {
                     errorMessage += e.Message + "\n";
                 };
 
+                // download XML content and read/validate
                 string xmlContent = DownloadContent(xmlUrl);
                 using (StringReader xmlSr = new StringReader(xmlContent))
                 {
                     using (XmlReader reader = XmlReader.Create(xmlSr, settings))
                     {
-                        while (reader.Read()) { }
+                        while (reader.Read()) { } // read through whole document to trigger validation
                     }
                 }
 
@@ -75,7 +78,7 @@ namespace ConsoleApp1
             }
         }
 
-        // Q2.2
+        // Q2.2 XML to JSON conversion method
         public static string Xml2Json(string xmlUrl)
         {
             try
@@ -84,6 +87,7 @@ namespace ConsoleApp1
                 XmlDocument doc = new XmlDocument();
                 doc.LoadXml(xmlContent);
 
+                // convert XmlDocument to JSON string format compatible with Newtonsoft.Json
                 string jsonText = JsonConvert.SerializeXmlNode(doc, Newtonsoft.Json.Formatting.Indented);
                 return jsonText;
             }
@@ -93,10 +97,10 @@ namespace ConsoleApp1
             }
         }
 
-        // Helper method to download content from URL
+        // helper method to download content from URL
         private static string DownloadContent(string url)
         {
-            using (WebClient client = new WebClient())
+            using (System.Net.WebClient client = new System.Net.WebClient())
             {
                 return client.DownloadString(url);
             }
